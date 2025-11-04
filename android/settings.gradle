@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    plugins {
+        // Android Gradle Plugin (AGP)
+        id "com.android.application" version "8.5.0" apply false
+        id "com.android.library" version "8.5.0" apply false
+
+        // Kotlin Plugin (ensure it matches AGP compatibility)
+        id "org.jetbrains.kotlin.android" version "1.9.25" apply false
+
+        // Flutter Gradle Plugin
+        id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
+    }
+}
+
+include(":app")
+
+// Optional for multi-module consistency (safe to leave as-is)
+rootProject.name = "fighter_doctors_pdf"
