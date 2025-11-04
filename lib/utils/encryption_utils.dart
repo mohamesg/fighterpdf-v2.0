@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:asn1lib/asn1lib.dart';
-import 'package:pointycastle/api.dart' show RSAPublicKey;
+import 'package:pointycastle/asymmetric/api.dart'; // ✅ Correct import for RSAPublicKey
 
 class EncryptionUtils {
   static const String _encryptionHeader = 'ENCPDF01';
@@ -12,7 +12,6 @@ class EncryptionUtils {
   static const int _keySize = 256; // bits
   static const int _ivSize = 16; // bytes
 
-  /// Generate a random AES key (256-bit)
   static Uint8List generateAESKey() {
     final random = Random.secure();
     return Uint8List.fromList(
@@ -20,7 +19,6 @@ class EncryptionUtils {
     );
   }
 
-  /// Generate a random IV (16 bytes)
   static Uint8List generateIV() {
     final random = Random.secure();
     return Uint8List.fromList(
@@ -28,13 +26,11 @@ class EncryptionUtils {
     );
   }
 
-  /// Validate PEM file format
   static bool validatePemFile(String pemContent) {
     return pemContent.contains('-----BEGIN PUBLIC KEY-----') &&
         pemContent.contains('-----END PUBLIC KEY-----');
   }
 
-  /// Extract public key from PEM content
   static RSAPublicKey? extractPublicKeyFromPem(String pemContent) {
     try {
       final lines = pemContent.split('\n');
@@ -50,7 +46,7 @@ class EncryptionUtils {
       final topLevelSeq = asn1Parser.nextObject() as ASN1Sequence;
       final publicKeyBitString = topLevelSeq.elements[1] as ASN1BitString;
 
-      // ✅ FIXED: use correct getter for asn1lib >=1.6
+      // ✅ Fixed: correct getter for ASN1BitString
       final publicKeyAsn1 = ASN1Parser(publicKeyBitString.valueBytes!).nextObject();
       final publicKeySeq = publicKeyAsn1 as ASN1Sequence;
 
@@ -64,12 +60,10 @@ class EncryptionUtils {
     }
   }
 
-  /// Verify encryption file integrity
   static bool verifyEncryptionFile(File encryptedFile) {
     try {
       final bytes = encryptedFile.readAsBytesSync();
       if (bytes.length < 8) return false;
-
       final header = String.fromCharCodes(bytes.sublist(0, 8));
       return header == _encryptionHeader;
     } catch (e) {
@@ -78,19 +72,15 @@ class EncryptionUtils {
     }
   }
 
-  /// Get encryption file metadata
   static Map<String, dynamic>? getEncryptionFileMetadata(File encryptedFile) {
     try {
       final bytes = encryptedFile.readAsBytesSync();
       if (bytes.length < 20) return null;
-
       final header = String.fromCharCodes(bytes.sublist(0, 8));
       if (header != _encryptionHeader) return null;
-
       final version = _bytesToInt(bytes.sublist(8, 12));
       final wrappedKeyLength = _bytesToInt(bytes.sublist(12, 16));
       final consumedFlag = bytes[16 + wrappedKeyLength];
-
       return {
         'header': header,
         'version': version,
