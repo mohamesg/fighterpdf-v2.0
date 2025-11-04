@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:asn1lib/asn1lib.dart';
-import 'package:pointycastle/api.dart';
+import 'package:pointycastle/api.dart' show RSAPublicKey;
 
 class EncryptionUtils {
   static const String _encryptionHeader = 'ENCPDF01';
@@ -50,8 +50,8 @@ class EncryptionUtils {
       final topLevelSeq = asn1Parser.nextObject() as ASN1Sequence;
       final publicKeyBitString = topLevelSeq.elements[1] as ASN1BitString;
 
-      final publicKeyAsn1 =
-          ASN1Parser(publicKeyBitString.stringValues as Uint8List).nextObject();
+      // ✅ FIXED: use correct getter for asn1lib >=1.6
+      final publicKeyAsn1 = ASN1Parser(publicKeyBitString.valueBytes!).nextObject();
       final publicKeySeq = publicKeyAsn1 as ASN1Sequence;
 
       final modulus = publicKeySeq.elements[0] as ASN1Integer;
@@ -104,7 +104,6 @@ class EncryptionUtils {
     }
   }
 
-  /// Helper function to convert bytes to int
   static int _bytesToInt(Uint8List bytes) {
     return ((bytes[0] << 24) |
         (bytes[1] << 16) |
@@ -112,18 +111,16 @@ class EncryptionUtils {
         bytes[3]);
   }
 
-  /// Calculate file hash for integrity verification
   static String calculateFileHash(File file) {
     final bytes = file.readAsBytesSync();
     return sha256.convert(bytes).toString();
   }
 
-  /// Validate file before encryption
   static bool validateFileBeforeEncryption(File file) {
     try {
       if (!file.existsSync()) return false;
       if (file.lengthSync() == 0) return false;
-      if (file.lengthSync() > 500 * 1024 * 1024) return false; // 500MB limit
+      if (file.lengthSync() > 500 * 1024 * 1024) return false;
       return true;
     } catch (e) {
       print('خطأ في التحقق من الملف: $e');
