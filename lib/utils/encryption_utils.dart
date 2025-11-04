@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'packagepackage:crypto/crypto.dart';
 import 'package:asn1lib/asn1lib.dart';
 import 'package:flutter/foundation.dart'; // <-- Added for debugPrint
 import 'package:pointycastle/asymmetric/api.dart'; // ✅ Correct import for RSAPublicKey
@@ -104,7 +104,8 @@ class EncryptionUtils {
 
   static String calculateFileHash(File file) {
     final bytes = file.readAsBytesSync();
-    return sha26.convert(bytes).toString();
+    // ✅ Fixed: Changed sha26 (typo) to sha256
+    return sha256.convert(bytes).toString();
   }
 
   static bool validateFileBeforeEncryption(File file) {
@@ -119,3 +120,4 @@ class EncryptionUtils {
     }
   }
 }
+
