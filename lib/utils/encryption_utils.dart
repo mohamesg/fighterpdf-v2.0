@@ -1,7 +1,10 @@
-import 'dart:typed_data';
 import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:pointycastle/export.dart';
+import 'package:asn1lib/asn1lib.dart';
+import 'package:pointycastle/api.dart';
 
 class EncryptionUtils {
   static const String _encryptionHeader = 'ENCPDF01';
@@ -9,16 +12,20 @@ class EncryptionUtils {
   static const int _keySize = 256; // bits
   static const int _ivSize = 16; // bytes
 
-  /// Generate a random AES key
+  /// Generate a random AES key (256-bit)
   static Uint8List generateAESKey() {
-    final random = _SecureRandom();
-    return Uint8List(32); // 256-bit key
+    final random = Random.secure();
+    return Uint8List.fromList(
+      List<int>.generate(_keySize ~/ 8, (_) => random.nextInt(256)),
+    );
   }
 
-  /// Generate a random IV
+  /// Generate a random IV (16 bytes)
   static Uint8List generateIV() {
-    final random = _SecureRandom();
-    return Uint8List(_ivSize);
+    final random = Random.secure();
+    return Uint8List.fromList(
+      List<int>.generate(_ivSize, (_) => random.nextInt(256)),
+    );
   }
 
   /// Validate PEM file format
@@ -38,12 +45,13 @@ class EncryptionUtils {
               !line.contains('END'))
           .join();
 
-      final keyBytes = _base64Decode(keyLines);
+      final keyBytes = base64.decode(keyLines);
       final asn1Parser = ASN1Parser(keyBytes);
       final topLevelSeq = asn1Parser.nextObject() as ASN1Sequence;
       final publicKeyBitString = topLevelSeq.elements[1] as ASN1BitString;
 
-      final publicKeyAsn1 = ASN1Parser(publicKeyBitString.stringValue).nextObject();
+      final publicKeyAsn1 =
+          ASN1Parser(publicKeyBitString.stringValues as Uint8List).nextObject();
       final publicKeySeq = publicKeyAsn1 as ASN1Sequence;
 
       final modulus = publicKeySeq.elements[0] as ASN1Integer;
@@ -98,17 +106,10 @@ class EncryptionUtils {
 
   /// Helper function to convert bytes to int
   static int _bytesToInt(Uint8List bytes) {
-    return ((bytes[0].toUnsigned(8) << 24) |
-        (bytes[1].toUnsigned(8) << 16) |
-        (bytes[2].toUnsigned(8) << 8) |
-        bytes[3].toUnsigned(8));
-  }
-
-  /// Helper function to decode base64
-  static Uint8List _base64Decode(String input) {
-    return Uint8List.fromList(
-      base64Decode(input.replaceAll('\n', '').replaceAll('\r', '')),
-    );
+    return ((bytes[0] << 24) |
+        (bytes[1] << 16) |
+        (bytes[2] << 8) |
+        bytes[3]);
   }
 
   /// Calculate file hash for integrity verification
@@ -129,43 +130,4 @@ class EncryptionUtils {
       return false;
     }
   }
-}
-
-/// Secure random number generator
-class _SecureRandom implements Random {
-  final _random = Random.secure();
-
-  @override
-  int nextInt(int max) => _random.nextInt(max);
-
-  @override
-  double nextDouble() => _random.nextDouble();
-
-  @override
-  bool nextBool() => _random.nextBool();
-}
-
-/// Base64 decode helper
-Uint8List base64Decode(String input) {
-  const base64chars =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  final output = <int>[];
-  var i = 0;
-
-  while (i < input.length) {
-    final c1 = base64chars.indexOf(input[i++]);
-    final c2 = i < input.length ? base64chars.indexOf(input[i++]) : 0;
-    final c3 = i < input.length ? base64chars.indexOf(input[i++]) : 0;
-    final c4 = i < input.length ? base64chars.indexOf(input[i++]) : 0;
-
-    output.add((c1 << 2) | (c2 >> 4));
-    if (c3 != 64) {
-      output.add(((c2 & 15) << 4) | (c3 >> 2));
-      if (c4 != 64) {
-        output.add(((c3 & 3) << 6) | c4);
-      }
-    }
-  }
-
-  return Uint8List.fromList(output);
 }
