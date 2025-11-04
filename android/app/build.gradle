@@ -1,6 +1,6 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
+    id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -12,15 +12,8 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
-}
-
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
-}
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode') ?: '1'
+def flutterVersionName = localProperties.getProperty('flutter.versionName') ?: '1.0'
 
 android {
     namespace "com.example.fighter_doctors_pdf"
@@ -28,16 +21,12 @@ android {
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
+        jvmTarget = '17'
     }
 
     defaultConfig {
@@ -46,14 +35,25 @@ android {
         targetSdk 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        
-        // Performance optimization
         multiDexEnabled true
+    }
+
+    signingConfigs {
+        release {
+            // Use your own keystore for real publishing
+            storeFile file("../app/key.jks")
+            storePassword "your_password"
+            keyAlias "your_alias"
+            keyPassword "your_password"
+        }
+        debug {
+            storeFile file("${System.properties['user.home']}/.android/debug.keystore")
+        }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.debug // Change to signingConfigs.release when you add a real key
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -63,10 +63,17 @@ android {
         }
     }
 
-    // Performance optimization
-    packagingOptions {
-        exclude 'META-INF/proguard/androidx-*.pro'
-        exclude 'META-INF/proguard/androidx-annotation-*.pro'
+    buildFeatures {
+        viewBinding true
+    }
+
+    packaging {
+        resources {
+            excludes += [
+                'META-INF/proguard/androidx-*.pro',
+                'META-INF/proguard/androidx-annotation-*.pro'
+            ]
+        }
     }
 }
 
@@ -76,15 +83,15 @@ flutter {
 
 dependencies {
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.0"
-    
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
+
     // AndroidX
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.core:core:1.12.0'
-    
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
+
     // Security
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
-    
+
     // Performance
-    implementation 'androidx.work:work-runtime-ktx:2.8.1'
+    implementation 'androidx.work:work-runtime-ktx:2.9.1'
 }
