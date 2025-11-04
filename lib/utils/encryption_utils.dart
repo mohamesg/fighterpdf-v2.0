@@ -4,11 +4,12 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:asn1lib/asn1lib.dart';
+import 'package:flutter/foundation.dart'; // <-- Added for debugPrint
 import 'package:pointycastle/asymmetric/api.dart'; // ✅ Correct import for RSAPublicKey
 
 class EncryptionUtils {
   static const String _encryptionHeader = 'ENCPDF01';
-  static const int _version = 1;
+  // static const int _version = 1; // <-- Removed unused field
   static const int _keySize = 256; // bits
   static const int _ivSize = 16; // bytes
 
@@ -55,7 +56,7 @@ class EncryptionUtils {
 
       return RSAPublicKey(modulus.valueAsBigInteger, exponent.valueAsBigInteger);
     } catch (e) {
-      print('خطأ في استخراج المفتاح العام: $e');
+      debugPrint('خطأ في استخراج المفتاح العام: $e'); // <-- Fixed: print to debugPrint
       return null;
     }
   }
@@ -67,7 +68,7 @@ class EncryptionUtils {
       final header = String.fromCharCodes(bytes.sublist(0, 8));
       return header == _encryptionHeader;
     } catch (e) {
-      print('خطأ في التحقق من الملف: $e');
+      debugPrint('خطأ في التحقق من الملف: $e'); // <-- Fixed: print to debugPrint
       return false;
     }
   }
@@ -89,7 +90,7 @@ class EncryptionUtils {
         'fileSize': bytes.length,
       };
     } catch (e) {
-      print('خطأ في قراءة بيانات الملف: $e');
+      debugPrint('خطأ في قراءة بيانات الملف: $e'); // <-- Fixed: print to debugPrint
       return null;
     }
   }
@@ -103,7 +104,7 @@ class EncryptionUtils {
 
   static String calculateFileHash(File file) {
     final bytes = file.readAsBytesSync();
-    return sha256.convert(bytes).toString();
+    return sha26.convert(bytes).toString();
   }
 
   static bool validateFileBeforeEncryption(File file) {
@@ -113,7 +114,7 @@ class EncryptionUtils {
       if (file.lengthSync() > 500 * 1024 * 1024) return false;
       return true;
     } catch (e) {
-      print('خطأ في التحقق من الملف: $e');
+      debugPrint('خطأ في التحقق من الملف: $e'); // <-- Fixed: print to debugPrint
       return false;
     }
   }

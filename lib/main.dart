@@ -1,9 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
+// import 'dart:typed_data'; // <-- Removed unused import
+import 'package:flutter/foundation.dart'; // <-- Added for debugPrint
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
+// import 'package:path_provider/path_provider.dart'; // <-- Removed unused import
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:share_plus/share_plus.dart';
@@ -550,7 +551,7 @@ class _PdfEditorScreenState extends State<PdfEditorScreen> {
     try {
       await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
     } catch (e) {
-      print('خطأ في تفعيل الوضع الآمن: $e');
+      debugPrint('خطأ في تفعيل الوضع الآمن: $e'); // <-- Fixed: print to debugPrint
     }
   }
 
@@ -620,13 +621,14 @@ class ShareScreen extends StatelessWidget {
       final encryptedFile = XFile(encryptedPath);
       final pemFile = XFile(pemPath);
 
-      await Share.shareXFiles(
+      // ✅ Fixed: Use SharePlus.instance.shareXFiles as recommended by analyzer
+      await SharePlus.instance.shareXFiles(
         [encryptedFile, pemFile],
         subject: 'ملف PDF مشفر آمن',
         text: 'ملف PDF مشفر بأمان. احتاج الملفين معاً لفتحه.',
       );
     } catch (e) {
-      print('خطأ في المشاركة: $e');
+      debugPrint('خطأ في المشاركة: $e'); // <-- Fixed: print to debugPrint
     }
   }
 
@@ -713,7 +715,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     try {
       await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
     } catch (e) {
-      print('خطأ في تفعيل الوضع الآمن: $e');
+      debugPrint('خطأ في تفعيل الوضع الآمن: $e'); // <-- Fixed: print to debugPrint
     }
   }
 
